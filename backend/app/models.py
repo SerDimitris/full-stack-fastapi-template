@@ -122,8 +122,75 @@ class Token(SQLModel):
 # Contents of JWT token
 class TokenPayload(SQLModel):
     sub: str | None = None
+    tenant_id: str | None = None
+
 
 
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
+
+
+# Tenant models
+class TenantBase(SQLModel):
+    id: str = Field(primary_key=True, min_length=1, max_length=255)
+    name: str = Field(min_length=1, max_length=255)
+    db_uri: str = Field(min_length=1, max_length=1024)
+    is_active: bool = True
+
+
+class Tenant(TenantBase, table=True):
+    pass
+
+
+class TenantCreate(TenantBase):
+    pass
+
+
+class TenantUpdate(SQLModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    db_uri: str | None = Field(default=None, min_length=1, max_length=1024)
+    is_active: bool | None = None
+
+
+class TenantPublic(TenantBase):
+    pass
+
+
+# Document models
+class DocumentBase(SQLModel):
+    title: str = Field(min_length=1, max_length=255)
+    content: str = Field(min_length=1)
+
+
+class DocumentCreate(DocumentBase):
+    pass
+
+
+class Document(DocumentBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    accuracy_report: str | None = Field(default=None)
+    is_accurate: bool | None = Field(default=None)
+    created_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    owner_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE"
+    )
+
+
+class DocumentPublic(DocumentBase):
+    id: uuid.UUID
+    accuracy_report: str | None = None
+    is_accurate: bool | None = None
+    created_at: datetime
+    owner_id: uuid.UUID
+
+
+class DocumentsPublic(SQLModel):
+    data: list[DocumentPublic]
+    count: int
+
+
+
