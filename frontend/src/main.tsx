@@ -17,6 +17,15 @@ OpenAPI.BASE = import.meta.env.VITE_API_URL
 OpenAPI.TOKEN = async () => {
   return localStorage.getItem("access_token") || ""
 }
+OpenAPI.HEADERS = async () => {
+  const tenantId = localStorage.getItem("tenant_id")
+  const headers: Record<string, string> = {}
+  if (tenantId) {
+    headers["X-Tenant-ID"] = tenantId
+  }
+  return headers
+}
+
 
 const handleApiError = (error: Error) => {
   if (error instanceof ApiError && [401, 403].includes(error.status)) {

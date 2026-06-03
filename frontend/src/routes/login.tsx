@@ -6,8 +6,6 @@ import {
 } from "@tanstack/react-router"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-
-import type { Body_login_login_access_token as AccessToken } from "@/client"
 import { AuthLayout } from "@/components/Common/AuthLayout"
 import {
   Form,
@@ -23,12 +21,13 @@ import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
 
 const formSchema = z.object({
-  username: z.email(),
+  username: z.string().email(),
   password: z
     .string()
     .min(1, { message: "Password is required" })
     .min(8, { message: "Password must be at least 8 characters" }),
-}) satisfies z.ZodType<AccessToken>
+  tenant_id: z.string().optional(),
+})
 
 type FormData = z.infer<typeof formSchema>
 
@@ -59,6 +58,7 @@ function Login() {
     defaultValues: {
       username: "",
       password: "",
+      tenant_id: localStorage.getItem("tenant_id") || "",
     },
   })
 
@@ -79,6 +79,25 @@ function Login() {
           </div>
 
           <div className="grid gap-4">
+            <FormField
+              control={form.control}
+              name="tenant_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tenant ID (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      data-testid="tenant-input"
+                      placeholder="default"
+                      type="text"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="username"

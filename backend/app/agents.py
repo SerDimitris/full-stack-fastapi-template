@@ -31,10 +31,10 @@ def review_document(title: str, content: str) -> dict[str, Any]:
         "Your task is to analyze the markdown document provided, verify its accuracy, "
         "identify errors, logic flaws, or grammatical issues, and suggest specific improvements.\n\n"
         "You MUST respond ONLY with a JSON object in this format:\n"
-        "{\n"
+        "{{\n"
         '  "is_accurate": true or false,\n'
         '  "report": "detailed markdown string describing issues and suggesting changes"\n'
-        "}\n"
+        "}}\n"
         "Do not wrap your output in conversational filler. Only return the JSON."
     )
 
@@ -44,6 +44,7 @@ def review_document(title: str, content: str) -> dict[str, Any]:
             ("user", "Document Title: {title}\n\nDocument Content:\n{content}"),
         ]
     )
+
 
     chain = prompt | llm
 
@@ -76,15 +77,19 @@ def chat_with_document(query: str, doc_title: str, doc_content: str) -> str:
     llm = get_ollama_llm()
 
     system_prompt = (
-        "You are a helpful chatbot assistant. "
-        "You MUST answer the user's questions in Greek only (using the Greek language and alphabet), "
-        "regardless of the language they ask the question in or the language of the document.\n\n"
-        "You are answering questions about the following document: '{title}'.\n"
-        "Use the document content below as your source of truth. "
-        "If the answer cannot be found in the text, let the user know in Greek, but try to answer as best as you can.\n\n"
-        "Document Content:\n"
+        "Είσαι ένας βοηθός τεχνητής νοημοσύνης (chatbot).\n"
+        "Πρέπει να απαντάς ΠΑΝΤΑ και ΑΠΟΚΛΕΙΣΤΙΚΑ στα Ελληνικά (χρησιμοποιώντας το ελληνικό αλφάβητο), "
+        "ακόμη και αν η ερώτηση ή το έγγραφο είναι σε άλλη γλώσσα.\n\n"
+        "Απαντάς σε ερωτήσεις του χρήστη με βάση το ακόλουθο έγγραφο: '{title}'.\n"
+        "Χρησιμοποίησε το περιεχόμενο του εγγράφου ως πηγή για να απαντήσεις. "
+        "Δώσε ιδιαίτερη προσοχή σε όλες τις λεπτομέρειες του κειμένου, ακόμη και σε πληροφορίες που βρίσκονται μέσα σε παρενθέσεις (...) ή επεξηγήσεις, "
+        "καθώς μπορεί να περιέχουν σημαντικές απαντήσεις.\n\n"
+        "Να είσαι βοηθητικός, φιλικός και να απαντάς με ακρίβεια βασιζόμενος στο κείμενο.\n\n"
+        "Περιεχόμενο Εγγράφου:\n"
         "{content}"
     )
+
+
 
 
     prompt = ChatPromptTemplate.from_messages(

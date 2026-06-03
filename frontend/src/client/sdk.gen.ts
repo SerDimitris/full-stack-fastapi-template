@@ -3,7 +3,119 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { DocumentsUploadDocumentData, DocumentsUploadDocumentResponse, DocumentsReadDocumentsData, DocumentsReadDocumentsResponse, DocumentsReadDocumentByIdData, DocumentsReadDocumentByIdResponse, DocumentsDeleteDocumentData, DocumentsDeleteDocumentResponse, DocumentsChatAboutDocumentData, DocumentsChatAboutDocumentResponse, ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, TenantsCreateTenantData, TenantsCreateTenantResponse, TenantsReadTenantsData, TenantsReadTenantsResponse, TenantsReadTenantByIdData, TenantsReadTenantByIdResponse, TenantsUpdateTenantData, TenantsUpdateTenantResponse, TenantsDeleteTenantData, TenantsDeleteTenantResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+
+export class DocumentsService {
+    /**
+     * Upload Document
+     * Upload a markdown document. The document will be saved and reviewed
+     * by the Accuracy Reviewer Agent using local Gemma via Ollama.
+     * @param data The data for the request.
+     * @param data.formData
+     * @returns DocumentPublic Successful Response
+     * @throws ApiError
+     */
+    public static uploadDocument(data: DocumentsUploadDocumentData): CancelablePromise<DocumentsUploadDocumentResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/documents/upload',
+            formData: data.formData,
+            mediaType: 'multipart/form-data',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Documents
+     * Retrieve documents uploaded by users of the current tenant.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns DocumentsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readDocuments(data: DocumentsReadDocumentsData = {}): CancelablePromise<DocumentsReadDocumentsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/documents/',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Document By Id
+     * Retrieve details of a specific document, including its accuracy report.
+     * @param data The data for the request.
+     * @param data.docId
+     * @returns DocumentPublic Successful Response
+     * @throws ApiError
+     */
+    public static readDocumentById(data: DocumentsReadDocumentByIdData): CancelablePromise<DocumentsReadDocumentByIdResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/documents/{doc_id}',
+            path: {
+                doc_id: data.docId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Document
+     * Delete a document.
+     * @param data The data for the request.
+     * @param data.docId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteDocument(data: DocumentsDeleteDocumentData): CancelablePromise<DocumentsDeleteDocumentResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/documents/{doc_id}',
+            path: {
+                doc_id: data.docId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Chat About Document
+     * Ask the chatbot agent a question regarding the contents of the document.
+     * @param data The data for the request.
+     * @param data.docId
+     * @param data.requestBody
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static chatAboutDocument(data: DocumentsChatAboutDocumentData): CancelablePromise<DocumentsChatAboutDocumentResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/documents/{doc_id}/chat',
+            path: {
+                doc_id: data.docId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
 
 export class ItemsService {
     /**
@@ -228,6 +340,117 @@ export class PrivateService {
             url: '/api/v1/private/users/',
             body: data.requestBody,
             mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
+
+export class TenantsService {
+    /**
+     * Create Tenant
+     * Create a new tenant. Only accessible by superusers.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns TenantPublic Successful Response
+     * @throws ApiError
+     */
+    public static createTenant(data: TenantsCreateTenantData): CancelablePromise<TenantsCreateTenantResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/tenants/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Tenants
+     * Retrieve tenants. Only accessible by superusers.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns TenantPublic Successful Response
+     * @throws ApiError
+     */
+    public static readTenants(data: TenantsReadTenantsData = {}): CancelablePromise<TenantsReadTenantsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/tenants/',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Tenant By Id
+     * Get a specific tenant's metadata. Only accessible by superusers.
+     * @param data The data for the request.
+     * @param data.tenantId
+     * @returns TenantPublic Successful Response
+     * @throws ApiError
+     */
+    public static readTenantById(data: TenantsReadTenantByIdData): CancelablePromise<TenantsReadTenantByIdResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/tenants/{tenant_id}',
+            path: {
+                tenant_id: data.tenantId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Tenant
+     * Update a tenant's details. Only accessible by superusers.
+     * @param data The data for the request.
+     * @param data.tenantId
+     * @param data.requestBody
+     * @returns TenantPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateTenant(data: TenantsUpdateTenantData): CancelablePromise<TenantsUpdateTenantResponse> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/v1/tenants/{tenant_id}',
+            path: {
+                tenant_id: data.tenantId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Tenant
+     * Delete a tenant. Only accessible by superusers.
+     * @param data The data for the request.
+     * @param data.tenantId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteTenant(data: TenantsDeleteTenantData): CancelablePromise<TenantsDeleteTenantResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/tenants/{tenant_id}',
+            path: {
+                tenant_id: data.tenantId
+            },
             errors: {
                 422: 'Validation Error'
             }

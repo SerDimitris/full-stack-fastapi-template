@@ -38,9 +38,17 @@ const useAuth = () => {
     },
   })
 
-  const login = async (data: AccessToken) => {
+  const login = async (data: AccessToken & { tenant_id?: string }) => {
+    if (data.tenant_id) {
+      localStorage.setItem("tenant_id", data.tenant_id)
+    } else {
+      localStorage.removeItem("tenant_id")
+    }
     const response = await LoginService.loginAccessToken({
-      formData: data,
+      formData: {
+        username: data.username,
+        password: data.password,
+      },
     })
     localStorage.setItem("access_token", response.access_token)
   }
