@@ -1,11 +1,17 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Request, status
 from sqlmodel import func, select
 
-from app.agents import chat_with_document, review_document
-from app.api.deps import CurrentUser, SessionDep
+from app.agents import (
+    chat_with_document,
+    review_document,
+    index_document_to_vector_store,
+    delete_document_from_vector_store,
+    query_document_vector_store,
+)
+from app.api.deps import CurrentUser, SessionDep, resolve_tenant_id
 from app.models import Document, DocumentPublic, DocumentsPublic, Message
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -15,13 +21,15 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 async def upload_document(
     *,
     session: SessionDep,
+    request: Request,
     current_user: CurrentUser,
     file: UploadFile = File(...),
     title: str | None = Form(None),
 ) -> Any:
     """
     Upload a markdown document. The document will be saved and reviewed
-    by the Accuracy Reviewer Agent using local Gemma via Ollama.
+    by the Accuracy Reviewer Agent using local Gemma via Ollama, and then
+    indexed into the tenant-specific Chroma vector store.
     """
     if not file.filename:
         raise HTTPException(
@@ -59,6 +67,13 @@ async def upload_document(
     session.add(db_doc)
     session.commit()
     session.refresh(db_doc)
+
+    # Index the document chunks in the tenant's vector store
+    tenant_id = resolve_tenant_id(request)
+    try:
+        index_document_to_vector_store(tenant_id=tenant_id, doc_id=db_doc.id, content=db_doc.content)
+    except Exception as e:
+        print(f"Error indexing document to vector store: {e}")
 
     return db_doc
 
@@ -106,12 +121,14 @@ def read_document_by_id(
 def chat_about_document(
     *,
     session: SessionDep,
+    request: Request,
     _current_user: CurrentUser,
     doc_id: uuid.UUID,
     payload: dict[str, str],
 ) -> Any:
     """
     Ask the chatbot agent a question regarding the contents of the document.
+    Relevant chunks are retrieved using semantic similarity from Chroma.
     """
     doc = session.get(Document, doc_id)
     if not doc:
@@ -127,8 +144,16 @@ def chat_about_document(
             detail="Field 'query' is required in JSON payload.",
         )
 
-    # Trigger Chatbot Agent (local Gemma)
-    reply = chat_with_document(query=query, doc_title=doc.title, doc_content=doc.content)
+    # Resolve tenant and retrieve relevant document chunks via semantic search
+    tenant_id = resolve_tenant_id(request)
+    try:
+        chunks = query_document_vector_store(tenant_id=tenant_id, doc_id=doc_id, query=query)
+    except Exception as e:
+        print(f"Error querying vector store: {e}")
+        chunks = []
+
+    # Trigger Chatbot Agent (local Gemma) with context chunks
+    reply = chat_with_document(query=query, doc_title=doc.title, doc_chunks=chunks)
     return Message(message=reply)
 
 
@@ -136,11 +161,12 @@ def chat_about_document(
 def delete_document(
     *,
     session: SessionDep,
+    request: Request,
     _current_user: CurrentUser,
     doc_id: uuid.UUID,
 ) -> Any:
     """
-    Delete a document.
+    Delete a document and its indexed vector store chunks.
     """
     doc = session.get(Document, doc_id)
     if not doc:
@@ -148,6 +174,14 @@ def delete_document(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Document with ID '{doc_id}' not found.",
         )
+
+    # Delete indexed chunks from the tenant's vector store
+    tenant_id = resolve_tenant_id(request)
+    try:
+        delete_document_from_vector_store(tenant_id=tenant_id, doc_id=doc_id)
+    except Exception as e:
+        print(f"Error deleting document from vector store: {e}")
+
     session.delete(doc)
     session.commit()
     return Message(message="Document deleted successfully.")

@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     SENTRY_DSN: HttpUrl | None = None
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "gemma4:31b-cloud"
+    OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
+    CHROMA_DATA_DIR: str = "chroma_data"
     POSTGRES_SERVER: str
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str
